@@ -5,8 +5,8 @@
     "source_url": "https://www.freightnet.com/rate-request/236660.htm",
     "input": "Please quote 1x40HC from Winnipeg, Canada to Kokshetau, Kazakhstan. Agricultural headers, gross weight 6000 kg. EXW. Door-to-door service required including customs clearance.",
     "expected": {
-      "origin": "Winnipeg",
-      "destination": "Kokshetau",
+      "origin": "Winnipeg, Canada",
+      "destination": "Kokshetau, Kazakhstan",
       "container_type": "40HC",
       "raw_equipment": "40HC",
       "container_count": 1,
@@ -28,7 +28,7 @@
     "input": "Rate request for 5x40HQ from Mundra to Mersin with final transit to Kabul, Afghanistan. Tobacco products, total gross weight 80000 kg.",
     "expected": {
       "origin": "Mundra",
-      "destination": "Kabul",
+      "destination": "Kabul, Afghanistan",
       "container_type": "40HC",
       "raw_equipment": "40HQ",
       "container_count": 5,
@@ -115,7 +115,7 @@
     "source_url": "https://www.freightnet.com/rate-request/234688.htm",
     "input": "EXW Dandenong, Australia to Hong Kong. 1x40HC equipment, approximately 20000 kg. Please include pickup and destination local charges.",
     "expected": {
-      "origin": "Dandenong",
+      "origin": "Dandenong, Australia",
       "destination": "Hong Kong",
       "container_type": "40HC",
       "raw_equipment": "40HC",
@@ -181,13 +181,13 @@
     "source_url": "https://www.freightnet.com/rate-request/235061.htm",
     "input": "Need door-to-door quote from Florida, USA to Denmark. 1x40HC containing two pickup trucks. Approximate total weight 10000 kg. Customs assistance required.",
     "expected": {
-      "origin": "Florida",
+      "origin": "Florida, USA",
       "destination": "Denmark",
       "container_type": "40HC",
       "raw_equipment": "40HC",
       "container_count": 1,
       "gross_weight_kg": 10000,
-      "commodity": "pickup trucks",
+      "commodity": "two pickup trucks",
       "cargo_ready_date": null,
       "required_arrival_date": null,
       "incoterm": null,
@@ -203,7 +203,7 @@
     "source_url": "https://www.freightnet.com/rate-request/235081.htm",
     "input": "Golden BC Canada to Port of Spain. 1x40HC ice machines, approximately 20 metric tons. FOB.",
     "expected": {
-      "origin": "Golden, BC",
+      "origin": "Golden, BC, Canada",
       "destination": "Port of Spain",
       "container_type": "40HC",
       "raw_equipment": "40HC",
@@ -315,7 +315,7 @@
     "expected": {
       "origin": "Tanga",
       "destination": "Cochin",
-      "container_type": "20GP",
+      "container_type": null,
       "raw_equipment": "20 foot container",
       "container_count": 1,
       "gross_weight_kg": 24000,
@@ -379,7 +379,7 @@
     "source_url": "https://www.wlafamily.com/inquiry.php",
     "input": "EXW pickup Snasa Norway, routing via Orkanger to Jebel Ali. 1x40HC bottled water.",
     "expected": {
-      "origin": "Snasa",
+      "origin": "Snasa, Norway",
       "destination": "Jebel Ali",
       "container_type": "40HC",
       "raw_equipment": "40HC",
