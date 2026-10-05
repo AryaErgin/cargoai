@@ -1,0 +1,76 @@
+{
+  "type": "object",
+  "properties": {
+    "origin": {
+      "type": ["string", "null"]
+    },
+    "destination": {
+      "type": ["string", "null"]
+    },
+    "container_type": {
+      "type": ["string", "null"],
+      "enum": ["20GP", "40GP", "40HC", "OTHER", null]
+    },
+    "raw_equipment": {
+      "type": ["string", "null"]
+    },
+    "container_count": {
+      "type": ["integer", "null"],
+      "minimum": 1
+    },
+    "gross_weight_kg": {
+      "type": ["number", "null"],
+      "minimum": 0
+    },
+    "commodity": {
+      "type": ["string", "null"]
+    },
+    "cargo_ready_date": {
+      "type": ["string", "null"],
+      "description": "YYYY-MM-DD only when the full date can be determined without guessing."
+    },
+    "required_arrival_date": {
+      "type": ["string", "null"],
+      "description": "YYYY-MM-DD only when explicitly stated and unambiguous."
+    },
+    "incoterm": {
+      "type": ["string", "null"]
+    },
+    "dangerous_goods": {
+      "type": ["boolean", "null"]
+    },
+    "hs_code": {
+      "type": ["string", "null"]
+    },
+    "service_scope": {
+      "type": ["string", "null"],
+      "enum": [
+        "port-port",
+        "door-port",
+        "port-door",
+        "door-door",
+        null
+      ]
+    },
+    "unsupported_equipment": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "origin",
+    "destination",
+    "container_type",
+    "raw_equipment",
+    "container_count",
+    "gross_weight_kg",
+    "commodity",
+    "cargo_ready_date",
+    "required_arrival_date",
+    "incoterm",
+    "dangerous_goods",
+    "hs_code",
+    "service_scope",
+    "unsupported_equipment"
+  ],
+  "additionalProperties": false
+}
