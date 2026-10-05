@@ -5,7 +5,7 @@ Small prototype that extracts structured freight RFQ data from shipment quote re
 ## Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/cargoai.git
+git clone https://github.com/AryaErgin/cargoai.git
 cd cargoai
 
 python -m venv .venv
