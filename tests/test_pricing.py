@@ -544,14 +544,18 @@ def test_dg_not_silently_priced(session, scenario):
 def api_payload(request, **changes):
     return {"tenant_id": str(request.tenant_id), "effective_date": request.effective_date.isoformat(),
         "requested_currency": "USD", "rfq": {"origin": "Shanghai", "destination": "Ambarli",
-        "container_type": "40HC", "container_count": 2}, **changes}
+        "container_type": "40HC", "container_count": 2, "dangerous_goods": False}, **changes}
 
 
 @pytest.fixture
-def client(session, monkeypatch):
+def client(session, scenario, monkeypatch):
     import api.main as api
     monkeypatch.setattr(api, "get_engine", lambda: session.get_bind())
-    return TestClient(api.app)
+    import api.lookups as lookups
+    monkeypatch.setattr(lookups, "get_engine", lambda: session.get_bind())
+    monkeypatch.setenv("CARGOAI_LOCAL_DEMO", "1")
+    monkeypatch.setenv("CARGOAI_DEMO_TENANT_ID", str(scenario[0].tenant_id))
+    return TestClient(api.app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000))
 
 
 def test_quote_api_success_and_persist(session, scenario, client):
@@ -559,7 +563,7 @@ def test_quote_api_success_and_persist(session, scenario, client):
     session.commit()
     response = client.post("/quote/spot", json=api_payload(request, persist=True))
     assert response.status_code == 200
-    assert response.json()["buy_total"] == "3165.00"
+    assert "buy_total" not in response.json()
     assert response.json()["sell_total"] == "3544.80"
     assert response.json()["quote_id"] is not None
 
@@ -595,3 +599,99 @@ def test_quote_api_malformed_and_no_free_text(scenario, client):
     payload["rfq"]["container_count"] = 0
     assert client.post("/quote/spot", json=payload).status_code == 422
     assert client.post("/quote/spot", json={"tenant_id": str(request.tenant_id), "text": "RFQ text"}).status_code == 422
+
+
+def reviewed_payload(request, **changes):
+    return {**request.model_dump(mode="json", exclude={"tenant_id"}), "dangerous_goods": False, **changes}
+
+
+@pytest.mark.parametrize("quantity,buy,sell", [(1, "1605.00", "1797.60"),
+    (2, "3165.00", "3544.80"), (3, "4725.00", "5292.00"), (10, "15645.00", "17522.40")])
+def test_mocked_extract_review_quote(session, scenario, client, monkeypatch, quantity, buy, sell):
+    import api.main as api
+    request, rate = scenario
+    extracted = {"origin": "Shanghai", "destination": "Ambarli", "container_type": "40HQ",
+                 "container_count": quantity, "dangerous_goods": False}
+    monkeypatch.setattr(api, "parse_spot_rfq", lambda text: extracted)
+    parsed = client.post("/parse/spot", json={"text": "Synthetic RFQ only"}).json()["result"]
+    choices = client.get("/quote/lookups").json()
+    payload = reviewed_payload(request, container_count=parsed["container_count"])
+    for field, kind, key in [("origin_location_id", "location", "origin"),
+                              ("destination_location_id", "location", "destination"),
+                              ("equipment_type_id", "equipment", "container_type")]:
+        payload[field] = client.get("/quote/lookups/resolve", params={"kind": kind, "value": parsed[key]}).json()["id"]
+    response = client.post("/quote/spot", json=payload)
+    assert response.status_code == 200, response.text
+    result = response.json()
+    assert result["sell_total"] == sell
+    assert sum(Decimal(line["sell_amount"]) for line in result["charges"]) == Decimal(sell)
+    assert result["valid_from"] == "2026-10-01" and result["valid_to"] == "2026-10-31"
+    assert result["selected_rate_id"] == str(rate.id) and result["demo_data"]
+    assert not {"buy_total", "markup_amount", "supplier_id", "applied_pricing_rules", "line_items"} & result.keys()
+    internal = price_quote(session, request.model_copy(update={"container_count": quantity}))
+    assert internal.buy_total == Decimal(buy) and internal.sell_total == Decimal(sell)
+    assert all(row["label"] in {"20GP", "40GP", "40HC"} for row in choices["equipment"])
+
+
+@pytest.mark.parametrize("quantity", [0, -1, 1.5, True, "2", None])
+def test_review_invalid_quantity(scenario, client, quantity):
+    assert client.post("/quote/spot", json=reviewed_payload(scenario[0], container_count=quantity)).status_code == 422
+
+
+@pytest.mark.parametrize("changes,code", [({"effective_date": "2026-11-01"}, "NO_RATE_FOUND"),
+    ({"requested_currency": "GBP"}, "MISSING_FX"), ({"dangerous_goods": True}, "INVALID_REQUEST")])
+def test_review_domain_errors(scenario, client, changes, code):
+    response = client.post("/quote/spot", json=reviewed_payload(scenario[0], **changes))
+    assert response.status_code == 422 and response.json()["detail"]["status"] == code
+
+
+def test_review_unavailable_route_and_unsupported_equipment(session, scenario, client):
+    request, _ = scenario
+    mersin = resolve_location(session, request.tenant_id, "Mersin")
+    unsupported = resolve_equipment(session, request.tenant_id, "40OT")
+    for changes, code in [({"destination_location_id": str(mersin.id)}, "NO_RATE_FOUND"),
+                          ({"equipment_type_id": str(unsupported.id)}, "INVALID_REQUEST")]:
+        response = client.post("/quote/spot", json=reviewed_payload(request, **changes))
+        assert response.status_code == 422 and response.json()["detail"]["status"] == code
+    assert client.post("/quote/spot", json=reviewed_payload(request, dangerous_goods=None)).status_code == 422
+
+
+def test_reference_ambiguity_and_company_isolation(session, scenario, client):
+    request, _ = scenario
+    other = create_tenant(session, name="Other", slug="other")
+    customer = create_customer(session, other.id, name="Private customer")
+    session.add_all([LocationAlias(tenant_id=request.tenant_id, alias="Ambiguous", location_id=request.origin_location_id),
+                     LocationAlias(tenant_id=request.tenant_id, alias="Ambiguous", location_id=request.destination_location_id),
+                     LocationAlias(tenant_id=other.id, alias="Private alias", location_id=request.origin_location_id)])
+    session.commit()
+    response = client.get("/quote/lookups/resolve", params={"kind": "location", "value": "Ambiguous"})
+    assert response.status_code == 409 and response.json()["detail"]["status"] == "AMBIGUOUS_REFERENCE"
+    assert client.get("/quote/lookups/resolve", params={"kind": "location", "value": "Shangha"}).status_code == 422
+    assert client.get("/quote/lookups/resolve", params={"kind": "location", "value": "Private alias"}).status_code == 422
+    assert not client.get("/quote/lookups").json()["customers"]
+    assert client.post("/quote/spot", json=reviewed_payload(request, tenant_id=str(other.id))).status_code == 403
+    assert client.post("/quote/spot", json=reviewed_payload(request, customer_id=str(customer.id))).status_code == 422
+
+
+def test_pricing_access_fail_closed(scenario, client, monkeypatch):
+    from api.main import app
+    payload = reviewed_payload(scenario[0])
+    assert client.get("/admin/rates", params={"tenant_id": str(scenario[0].tenant_id)}).status_code == 403
+    for headers in [{"Origin": "https://public.example"}, {"X-Forwarded-For": "127.0.0.1"}, {"Host": "public.example"}]:
+        assert client.post("/quote/spot", json=payload, headers=headers).status_code == 403
+    remote = TestClient(app, base_url="http://127.0.0.1", client=("192.0.2.1", 50000))
+    assert remote.get("/quote/lookups").status_code == 403
+    monkeypatch.delenv("CARGOAI_LOCAL_DEMO")
+    assert client.post("/quote/spot", json=payload).status_code == 403
+    assert client.get("/quote/lookups").status_code == 403
+
+
+def test_lookup_service_failure_is_clear(client, monkeypatch):
+    import api.lookups as lookups
+    def unavailable():
+        raise RuntimeError("Private connection information")
+    monkeypatch.setattr(lookups, "get_engine", unavailable)
+    for path in ["/quote/lookups", "/quote/lookups/resolve?kind=location&value=Shanghai"]:
+        response = client.get(path)
+        assert response.status_code == 503
+        assert response.json()["detail"] == "Pricing lookup database/service unavailable"

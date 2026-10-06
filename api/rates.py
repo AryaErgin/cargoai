@@ -2,13 +2,15 @@
 from datetime import date
 from uuid import UUID
 from typing import Literal
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from api.access import internal_access
 from database.session import get_engine, session_scope
 from rate_management import service
 from rate_management.models import SheetCreate, RateCreate, ChargeRequest, ChargeCreate, RateVersion, RatePatch, DeactivateRequest, Status, CommercialType
 from rate_management.exceptions import RateManagementError
 
-router = APIRouter(prefix="/admin/rates", tags=["Internal development: rate management"])
+router = APIRouter(prefix="/admin/rates", tags=["Internal development: rate management"],
+                   dependencies=[Depends(internal_access)])
 
 
 def execute(function, tenant_id, *args, **kwargs):

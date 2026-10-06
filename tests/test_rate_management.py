@@ -281,6 +281,7 @@ def test_api_rate_management(session, scenario, monkeypatch):
     from fastapi.testclient import TestClient
     from contextlib import contextmanager
     from api.main import app
+    from api.access import internal_access
     import api.rates as routes
     request, original = scenario
     @contextmanager
@@ -288,6 +289,7 @@ def test_api_rate_management(session, scenario, monkeypatch):
         yield session
     monkeypatch.setattr(routes, 'session_scope', scope)
     monkeypatch.setattr(routes, 'get_engine', lambda: None)
+    monkeypatch.setitem(app.dependency_overrides, internal_access, lambda: None)
     with TestClient(app) as client:
         response = client.post('/admin/rates/sheets', json={'tenant_id': str(request.tenant_id), 'supplier_id': str(original.supplier_id), 'name': 'api rates'})
         assert response.status_code == 200

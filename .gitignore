@@ -8,3 +8,4 @@ cargoai.db
 *.db-shm
 *.db-wal
 .pytest_cache/
+backend.log

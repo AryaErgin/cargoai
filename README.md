@@ -50,7 +50,7 @@ NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
 Start the backend from the repository root:
 
 ```bash
-python -m uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn api.main:app --reload --host 127.0.0.1 --port 8000 --no-proxy-headers
 ```
 
 In a second terminal, start the frontend:
@@ -68,7 +68,7 @@ Open the frontend at [http://localhost:3000](http://localhost:3000). The backend
 - `POST /parse/spot` — extract fields from a Spot RFQ
 - `POST /parse/tender` — extract fields from a Freight Tender
 
-The public demo processes submitted text for extraction and does not persist it. The internal pricing service is separate from the frontend. Booking, tracking, customs automation, and Excel upload are not available.
+The public demo processes submitted text for extraction and does not persist it. Spot extraction now opens an editable shipment review form and can calculate a deterministic quote in explicitly configured local demo mode. Booking, tracking, customs automation, and Excel upload are not available.
 
 ## Database
 
@@ -119,7 +119,7 @@ alembic upgrade head
 python -m database.seed
 ```
 
-Internal/dev endpoint: `POST /quote/spot` (not connected to the frontend). Example body, using your seeded tenant UUID:
+Local demo endpoint: `POST /quote/spot`. Legacy structured RFQs remain supported; reviewed shipment IDs are preferred. Example legacy body:
 
 ```json
 {
@@ -128,7 +128,8 @@ Internal/dev endpoint: `POST /quote/spot` (not connected to the frontend). Examp
     "origin": "Shanghai",
     "destination": "Ambarli",
     "container_type": "40HC",
-    "container_count": 2
+    "container_count": 2,
+    "dangerous_goods": false
   },
   "effective_date": "2026-10-15",
   "requested_currency": "USD",
@@ -136,7 +137,78 @@ Internal/dev endpoint: `POST /quote/spot` (not connected to the frontend). Examp
 }
 ```
 
-The demo returns buy **3165.00 USD**, markup **379.80 USD**, and sell **3544.80 USD**. Responses include charge, FX, rule, and rate-selection metadata; monetary and FX values serialize as decimal strings. `persist` defaults to false. Explicit persistence saves rate/charge references and a full audit snapshot; current parser endpoints do not persist text. This development endpoint has no authentication and must not be exposed as a public tenant-access API.
+The engine calculates buy **3165.00 USD**, markup **379.80 USD**, and sell **3544.80 USD**. The HTTP response exposes customer sell amounts only. Buy costs, supplier details, and rule/markup metadata remain in internal engine results and historical audit snapshots. `persist` defaults to false; explicit persistence retains original rate/charge references. No authenticated internal user exists yet, so rate administration HTTP routes are disabled (403).
+
+## Local RFQ-to-pricing workflow
+
+There is no authentication. Pricing and lookups fail closed unless `CARGOAI_LOCAL_DEMO=1` and `CARGOAI_DEMO_TENANT_ID` identifies the active seeded `demo-forwarder`. A caller-supplied tenant ID cannot change access. The API requires a loopback client and host, rejects forwarded headers and non-local browser origins, and must run directly on loopback. Keep demo mode disabled for online deployments until authenticated company access and internal roles are implemented. There is no browser shared secret; `OPENAI_API_KEY` and `DATABASE_URL` remain backend-only.
+
+Exact Windows PowerShell startup from the repository root (first stop any running backend with Ctrl+C):
+
+```powershell
+. .\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
+$env:DATABASE_URL = "sqlite:///./cargoai.db"
+python -m alembic upgrade head
+python -m database.seed
+# Copy tenant_id printed by the seed command:
+$env:CARGOAI_DEMO_TENANT_ID = "<seeded tenant UUID>"
+$env:CARGOAI_LOCAL_DEMO = "1"
+python -m uvicorn api.main:app --reload --host 127.0.0.1 --port 8000 --no-proxy-headers
+```
+
+In another PowerShell terminal:
+
+```powershell
+cd frontend
+# frontend/.env.local: NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
+npm install
+npm run dev -- --hostname 127.0.0.1
+```
+
+Open `http://localhost:3000`. Paste a synthetic RFQ, extract, review the origin/destination, equipment, positive whole-number quantity, pricing date, currency, DG status and optional customer/incoterm, then calculate. Use pricing date **2026-10-15** for the October demo. Dates outside stored validity are rejected; expired rates never roll forward. Unknown DG status remains unknown and blocks calculation until confirmed. V1 rejects DG and equipment outside 20GP/40GP/40HC.
+
+`GET /quote/lookups` returns shared canonical locations, supported equipment, and active customers scoped to the configured company. `GET /quote/lookups/resolve?kind=location&value=Shanghai` (or `kind=equipment`) reuses exact canonical/alias resolution with private aliases taking precedence over shared aliases. Ambiguity returns 409 and requires user selection; no fuzzy match is selected. Unknown extracted values remain visible.
+
+Reviewed `POST /quote/spot` body (no tenant ID needed):
+
+```json
+{
+  "origin_location_id": "<location UUID>",
+  "destination_location_id": "<location UUID>",
+  "equipment_type_id": "<equipment UUID>",
+  "container_count": 3,
+  "effective_date": "2026-10-15",
+  "requested_currency": "USD",
+  "dangerous_goods": false,
+  "customer_id": null,
+  "incoterm": "FOB"
+}
+```
+
+Customer-facing charges allocate the engine's final sell total proportionally across its included charge lines, with the final line absorbing cent rounding. This is display allocation only; the engine arithmetic, charge bases, FX and rate/rule precedence are unchanged. Supplier amounts are never returned to this unauthenticated browser. The quote shows synthetic-demo labeling, selected rate reference and intersected sheet/rate validity. Editing any reviewed field clears the quote and invalidates pending responses; calculating never calls extraction again.
+
+Offline verification (mocked extraction; no RFQs sent to OpenAI):
+
+```powershell
+. .\.venv\Scripts\Activate.ps1
+# Tests mock extraction. If no backend key is configured, use a dummy key:
+$env:OPENAI_API_KEY = "offline-test-placeholder"
+python -m pytest tests -q
+cd frontend
+npm test -- --run
+npx tsc --noEmit
+npm run build
+```
+
+Backend tests use migrated temporary SQLite databases and seed rates. Tests cover the full mocked extraction → exact resolution → quote flow, quantity validation, unavailable/expired rates, missing FX, ambiguous references/rates, unsupported equipment/DG, company isolation and local-only access. Frontend tests cover review, explicit DG confirmation, calculation without re-extraction, errors and stale-response invalidation.
+
+| Containers | Internal buy USD | Customer sell USD |
+| --- | ---: | ---: |
+| 1 | 1605.00 | 1797.60 |
+| 2 | 3165.00 | 3544.80 |
+| 3 | 4725.00 | 5292.00 |
+| 10 | 15645.00 | 17522.40 |
 
 ## Commercial rates and commitments
 
@@ -152,4 +224,4 @@ A forwarder committing a 6- or 12-month customer price while buying at shorter m
 
 Internal/dev manual endpoints under `/admin/rates` manage tenant-scoped ocean FCL sheets, directional lanes, charges and versioned replacements. Lifecycle: **DRAFT → ACTIVE → EXPIRED → ARCHIVED**. Historical economics are never silently overwritten or deleted; quotes keep their exact original rate/charge references. Descriptive/status edits are audited, and economic changes create successor IDs with structured diffs. Overlap warnings and duplicate/ambiguity checks reuse existing pricing rules.
 
-Every request explicitly requires `tenant_id`; there is no authentication yet, so these endpoints must remain internal. No frontend rate UI or file ingestion exists. Future Excel/CSV imports will use the same validation and service layer rather than bypassing business rules. See [API, versioning and import contract](docs/rate-management.md).
+Every rate-management service request explicitly requires `tenant_id`. HTTP administration is blocked until authenticated internal access is implemented; service-level workflows and tests remain available. No frontend rate UI or file ingestion exists. Future Excel/CSV imports will use the same validation and service layer rather than bypassing business rules. See [API, versioning and import contract](docs/rate-management.md).

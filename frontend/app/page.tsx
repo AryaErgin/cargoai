@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import ReviewShipment from "./ReviewShipment";
 
 import { MAX_INPUT_LENGTH, requestExtraction, type ParserKind } from "../lib/parser";
 
@@ -228,6 +229,7 @@ export default function Home() {
                 <p className="result-footnote">Review each field against the original request before use.</p>
               </section>
             )}
+            {activeTab === "spot" && panel.result && <ReviewShipment extracted={panel.result} />}
           </section>
         </section>
 
