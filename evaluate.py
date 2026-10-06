@@ -1,4 +1,5 @@
 import json
+import argparse
 from pathlib import Path
 import os
 import re
@@ -117,20 +118,26 @@ def post_process_rfq(data, email_text):
         explicit_scopes.pop() if len(explicit_scopes) == 1 else None
     )
 
-    email_text_lower = email_text.lower()
-    has_unqualified_20_foot_container = (
-        "20 foot container" in email_text_lower
-        or "20' container" in email_text_lower
-    )
+    has_unqualified_20_foot_equipment = re.search(
+        r"(?<!\d)20\s*(?:-\s*)?(?:foot|feet|ft)(?:\s*-\s*|\s+)"
+        r"(?:shipping\s+)?(?:containers?|FCL)\b"
+        r"|(?<!\d)20\s*['\u2032](?:\s*-\s*|\s+)(?:shipping\s+)?(?:containers?|FCL)\b"
+        r"|\bFCL\s+(?<!\d)20\s*(?:-\s*)?(?:foot|feet|ft)\b",
+        email_text,
+        re.IGNORECASE,
+    ) is not None
     has_explicit_container_type = re.search(
-        r"\b(?:gp|dry|standard|general purpose)\b", email_text_lower
+        r"\b(?:gp|dry|standard|general purpose)\b", email_text, re.IGNORECASE
     ) is not None
     if (
         data["container_type"] == "20GP"
-        and has_unqualified_20_foot_container
+        and has_unqualified_20_foot_equipment
         and not has_explicit_container_type
     ):
         data["container_type"] = None
+
+    if not explicit_container_quantity_matches(email_text):
+        data["container_count"] = None
 
     generic_logistics_descriptors = {
         "cargo",
@@ -199,21 +206,50 @@ def recover_missing_commodity(email_text, data):
     return data
 
 
+def explicit_container_quantity_matches(email_text):
+    patterns = [
+        re.compile(
+            r"(?<!\w)(?P<quantity>\d+)\s*[x\u00d7]\s*"
+            r"(?:20\s*GP|40\s*(?:GP|HC|HQ|OT))\b",
+            re.IGNORECASE,
+        ),
+        re.compile(
+            r"(?<!\w)(?P<quantity>\d+)\s*[x\u00d7]\s*"
+            r"(?:(?:20|40)\s*(?:ft|foot|feet|['\u2032])"
+            r"(?:[-\s]+[A-Za-z]+){0,3}\s+)?(?:shipping\s+)?containers?\b",
+            re.IGNORECASE,
+        ),
+        re.compile(
+            r"\b(?:shipping\s+)?containers?\s+quantity\s*"
+            r"(?:is\s+|of\s+|[:=]\s*)?(?P<quantity>\d+)\b",
+            re.IGNORECASE,
+        ),
+        re.compile(
+            r"(?<!\w)(?P<quantity>\d+)\s+(?:shipping\s+)?containers?\b",
+            re.IGNORECASE,
+        ),
+    ]
+    matches = [match for pattern in patterns for match in pattern.finditer(email_text)]
+    return sorted(matches, key=lambda match: match.start())
+
+
 def recover_explicit_container_count(email_text, data):
-    equipment_pattern = re.compile(
-        r"(?<!\w)(\d+)\s*[x\u00d7]\s*(?:20\s*GP|40\s*(?:GP|HC|HQ|OT))\b",
-        re.IGNORECASE,
-    )
-    matches = list(equipment_pattern.finditer(email_text))
+    matches = explicit_container_quantity_matches(email_text)
     if not matches:
         return data
 
     for previous, current in zip(matches, matches[1:]):
-        if re.search(r"\bor\b", email_text[previous.end():current.start()], re.IGNORECASE):
+        if re.search(
+            r"\bor\b",
+            email_text[previous.end():current.start()],
+            re.IGNORECASE,
+        ):
             data["container_count"] = None
             return data
 
-    data["container_count"] = sum(int(match.group(1)) for match in matches)
+    data["container_count"] = sum(
+        int(match.group("quantity")) for match in matches
+    )
     return data
 
 
@@ -268,8 +304,8 @@ def recover_explicit_commodity(email_text, data):
 
     return data
 
-def load_cases():
-    with DATA_PATH.open("r", encoding="utf-8") as f:
+def load_cases(dataset_path=DATA_PATH):
+    with Path(dataset_path).open("r", encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -305,10 +341,11 @@ def calculate_accuracy(all_results):
     return correct / total if total else 0
 
 
-def main():
-    cases = load_cases()
+def main(dataset_path=DATA_PATH):
+    cases = load_cases(dataset_path)
 
     all_results = []
+    failures_by_rfq = []
 
     for case in cases:
         actual = extract_rfq(case["input"])
@@ -331,22 +368,35 @@ def main():
         ]
 
         if wrong_fields:
-            print(f'{case["id"]}: FAIL')
+            failures_by_rfq.append(
+                (case["id"], case["expected"], actual, wrong_fields)
+            )
 
+    total_fields = sum(len(results) for results in all_results)
+    correct_fields = sum(
+        sum(results.values()) for results in all_results
+    )
+    accuracy = correct_fields / total_fields if total_fields else 0
+
+    print(f"RFQs tested: {len(cases)}")
+    print(f"Total evaluated fields: {total_fields}")
+    print(f"Correct fields: {correct_fields}")
+    print(f"Field accuracy: {accuracy:.2%}")
+    print("Failures by RFQ:")
+    if failures_by_rfq:
+        for rfq_id, expected, actual, wrong_fields in failures_by_rfq:
+            print(f"  {rfq_id}:")
             for field in wrong_fields:
                 print(
-                    f"  {field}: "
-                    f"expected={case['expected'].get(field)!r}, "
+                    f"    {field}: expected={expected.get(field)!r}, "
                     f"actual={actual.get(field)!r}"
                 )
-        else:
-            print(f'{case["id"]}: PASS')
-
-    accuracy = calculate_accuracy(all_results)
-
-    print()
-    print(f"Field accuracy: {accuracy:.2%}")
+    else:
+        print("  None")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dataset", nargs="?", type=Path, default=DATA_PATH)
+    args = parser.parse_args()
+    main(args.dataset)
