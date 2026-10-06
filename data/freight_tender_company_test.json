@@ -1,0 +1,226 @@
+[
+  {
+    "id": "COMPANY_TENDER_001",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Sea freight tender. Pick-up location: Changsha, China. Port of loading: Changsha. Port of discharge: \u0130stanbul/Ambarl\u0131. Unloading location: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE. Equipment: 40'HC. Quantity: 420.",
+    "expected": {
+      "transport_mode": "sea",
+      "pickup_location": "Changsha, China",
+      "port_of_loading": "Changsha",
+      "port_of_discharge": "\u0130stanbul/Ambarl\u0131",
+      "unloading_location": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE",
+      "equipment_type": "40'HC",
+      "equipment_quantity": 420,
+      "incoterm": null
+    }
+  },
+  {
+    "id": "COMPANY_TENDER_002",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Sea freight tender. Pick-up location: Changsha, China. Port of loading: Shanghai. Port of discharge: Derince/Kocaeli. Unloading location: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE. Equipment: 40'HC. Quantity: 1260.",
+    "expected": {
+      "transport_mode": "sea",
+      "pickup_location": "Changsha, China",
+      "port_of_loading": "Shanghai",
+      "port_of_discharge": "Derince/Kocaeli",
+      "unloading_location": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE",
+      "equipment_type": "40'HC",
+      "equipment_quantity": 1260,
+      "incoterm": null
+    }
+  },
+  {
+    "id": "COMPANY_TENDER_003",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Sea freight tender. Pick-up location: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE. Port of loading: Istanbul. Port of discharge: Norfolk. Unloading location: Sturtevant, WI, USA. Equipment: Flat Rack (12,2 x 2,5 x 3,7m). Quantity: 140.",
+    "expected": {
+      "transport_mode": "sea",
+      "pickup_location": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE",
+      "port_of_loading": "Istanbul",
+      "port_of_discharge": "Norfolk",
+      "unloading_location": "Sturtevant, WI, USA",
+      "equipment_type": "Flat Rack (12,2 x 2,5 x 3,7m)",
+      "equipment_quantity": 140,
+      "incoterm": null
+    }
+  },
+  {
+    "id": "COMPANY_TENDER_004",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Sea freight tender. Pick-up location: Aichtal, Germany. Port of loading: Hamburg. Port of discharge: Norfolk. Unloading location: Sturtevant, WI, USA. Equipment: Flat Rack (12,2 x 2,5 x 3,7m). Quantity: 20.",
+    "expected": {
+      "transport_mode": "sea",
+      "pickup_location": "Aichtal, Germany",
+      "port_of_loading": "Hamburg",
+      "port_of_discharge": "Norfolk",
+      "unloading_location": "Sturtevant, WI, USA",
+      "equipment_type": "Flat Rack (12,2 x 2,5 x 3,7m)",
+      "equipment_quantity": 20,
+      "incoterm": null
+    }
+  },
+  {
+    "id": "COMPANY_TENDER_005",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Sea freight tender. Pick-up location: Changsha, China. Port of loading: Shanghai. Port of discharge: Chicago. Unloading location: Sturtevant, WI, USA. Equipment: Flat Rack (12,2 x 2,5 x 3,7m). Quantity: 20.",
+    "expected": {
+      "transport_mode": "sea",
+      "pickup_location": "Changsha, China",
+      "port_of_loading": "Shanghai",
+      "port_of_discharge": "Chicago",
+      "unloading_location": "Sturtevant, WI, USA",
+      "equipment_type": "Flat Rack (12,2 x 2,5 x 3,7m)",
+      "equipment_quantity": 20,
+      "incoterm": null
+    }
+  },
+  {
+    "id": "COMPANY_TENDER_006",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Sea freight tender. Pick-up location: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE. Port of loading: Istanbul. Port of discharge: Chicago. Unloading location: Sturtevant, WI, USA. Equipment: 40'- O.T.. Quantity: 90.",
+    "expected": {
+      "transport_mode": "sea",
+      "pickup_location": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE",
+      "port_of_loading": "Istanbul",
+      "port_of_discharge": "Chicago",
+      "unloading_location": "Sturtevant, WI, USA",
+      "equipment_type": "40'- O.T.",
+      "equipment_quantity": 90,
+      "incoterm": null
+    }
+  },
+  {
+    "id": "COMPANY_TENDER_007",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Sea freight tender. Pick-up location: Aichtal, Germany. Port of loading: Hamburg. Port of discharge: Chicago. Unloading location: Sturtevant, WI, USA. Equipment: 40'HC. Quantity: 20.",
+    "expected": {
+      "transport_mode": "sea",
+      "pickup_location": "Aichtal, Germany",
+      "port_of_loading": "Hamburg",
+      "port_of_discharge": "Chicago",
+      "unloading_location": "Sturtevant, WI, USA",
+      "equipment_type": "40'HC",
+      "equipment_quantity": 20,
+      "incoterm": null
+    }
+  },
+  {
+    "id": "COMPANY_TENDER_008",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Sea freight tender. Pick-up location: Cangzhou, China. Port of loading: Xingang. Port of discharge: Chicago. Unloading location: Sturtevant, WI, USA. Equipment: 40'HC. Quantity: 30.",
+    "expected": {
+      "transport_mode": "sea",
+      "pickup_location": "Cangzhou, China",
+      "port_of_loading": "Xingang",
+      "port_of_discharge": "Chicago",
+      "unloading_location": "Sturtevant, WI, USA",
+      "equipment_type": "40'HC",
+      "equipment_quantity": 30,
+      "incoterm": null
+    }
+  },
+  {
+    "id": "COMPANY_TENDER_009",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Sea freight tender. Pick-up location: Changsha, China. Port of loading: Shanghai. Port of discharge: Nhava Sheva. Unloading location: Goa, India. Equipment: 40'HC. Quantity: 30.",
+    "expected": {
+      "transport_mode": "sea",
+      "pickup_location": "Changsha, China",
+      "port_of_loading": "Shanghai",
+      "port_of_discharge": "Nhava Sheva",
+      "unloading_location": "Goa, India",
+      "equipment_type": "40'HC",
+      "equipment_quantity": 30,
+      "incoterm": null
+    }
+  },
+  {
+    "id": "COMPANY_TENDER_010",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Sea freight tender. Pick-up location: Shanghai, China. Port of loading: Shanghai. Port of discharge: Nhava Sheva. Unloading location: Goa, India. Equipment: Flat Rack (12,2 x 2,5 x 3,7m). Quantity: 310.",
+    "expected": {
+      "transport_mode": "sea",
+      "pickup_location": "Shanghai, China",
+      "port_of_loading": "Shanghai",
+      "port_of_discharge": "Nhava Sheva",
+      "unloading_location": "Goa, India",
+      "equipment_type": "Flat Rack (12,2 x 2,5 x 3,7m)",
+      "equipment_quantity": 310,
+      "incoterm": null
+    }
+  },
+  {
+    "id": "COMPANY_TENDER_011",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Road freight tender. Pick-up location: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE. Unloading location: Aichtal, Germany. Equipment: Standard Full Truck. Quantity: 270. Incoterm: FCA Cerkezk\u00f6y.",
+    "expected": {
+      "transport_mode": "road",
+      "pickup_location": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE",
+      "port_of_loading": null,
+      "port_of_discharge": null,
+      "unloading_location": "Aichtal, Germany",
+      "equipment_type": "Standard Full Truck",
+      "equipment_quantity": 270,
+      "incoterm": "FCA"
+    }
+  },
+  {
+    "id": "COMPANY_TENDER_012",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Road freight tender. Pick-up location: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE. Unloading location: Aichtal, Germany. Equipment: Low Bed Trailers (12,2 x 2,5 x 3,7m). Quantity: 55. Incoterm: FCA Cerkezk\u00f6y.",
+    "expected": {
+      "transport_mode": "road",
+      "pickup_location": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE",
+      "port_of_loading": null,
+      "port_of_discharge": null,
+      "unloading_location": "Aichtal, Germany",
+      "equipment_type": "Low Bed Trailers (12,2 x 2,5 x 3,7m)",
+      "equipment_quantity": 55,
+      "incoterm": "FCA"
+    }
+  },
+  {
+    "id": "COMPANY_TENDER_013",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Road freight tender. Pick-up location: Aichtal, Germany. Unloading location: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE. Equipment: Standard Full Truck. Quantity: 70. Incoterm: FCA Aichtal.",
+    "expected": {
+      "transport_mode": "road",
+      "pickup_location": "Aichtal, Germany",
+      "port_of_loading": null,
+      "port_of_discharge": null,
+      "unloading_location": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE",
+      "equipment_type": "Standard Full Truck",
+      "equipment_quantity": 70,
+      "incoterm": "FCA"
+    }
+  },
+  {
+    "id": "COMPANY_TENDER_014",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Road freight tender. Pick-up location: Tenevo, Bulgaria. Unloading location: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE. Equipment: Standard Full Truck. Quantity: 60. Incoterm: CPT Cerkezk\u00f6y.",
+    "expected": {
+      "transport_mode": "road",
+      "pickup_location": "Tenevo, Bulgaria",
+      "port_of_loading": null,
+      "port_of_discharge": null,
+      "unloading_location": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE",
+      "equipment_type": "Standard Full Truck",
+      "equipment_quantity": 60,
+      "incoterm": "CPT"
+    }
+  }
+]

@@ -1,0 +1,100 @@
+[
+  {
+    "id": "COMPANY_001",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Seafreight. Equipment: 40'HC. Quantity: 420. Pick-up place: Changsha, China. Place of unloading: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE.",
+    "expected": {"origin": "Changsha, China", "destination": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE", "container_type": "40HC", "raw_equipment": "40'HC", "container_count": 420, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": null, "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": false}
+  },
+  {
+    "id": "COMPANY_002",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Seafreight. Equipment: 40'HC. Quantity: 1260. Pick-up place: Changsha, China. Place of unloading: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE.",
+    "expected": {"origin": "Changsha, China", "destination": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE", "container_type": "40HC", "raw_equipment": "40'HC", "container_count": 1260, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": null, "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": false}
+  },
+  {
+    "id": "COMPANY_003",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Seafreight. Equipment: Flat Rack (12,2 x 2,5 x 3,7m). Quantity: 140. Pick-up place: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE. Place of unloading: Sturtevant, WI, USA.",
+    "expected": {"origin": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE", "destination": "Sturtevant, WI, USA", "container_type": "OTHER", "raw_equipment": "Flat Rack (12,2 x 2,5 x 3,7m)", "container_count": 140, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": null, "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": true}
+  },
+  {
+    "id": "COMPANY_004",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Seafreight. Equipment: Flat Rack (12,2 x 2,5 x 3,7m). Quantity: 20. Pick-up place: Aichtal, Germany. Place of unloading: Sturtevant, WI, USA.",
+    "expected": {"origin": "Aichtal, Germany", "destination": "Sturtevant, WI, USA", "container_type": "OTHER", "raw_equipment": "Flat Rack (12,2 x 2,5 x 3,7m)", "container_count": 20, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": null, "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": true}
+  },
+  {
+    "id": "COMPANY_005",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Seafreight. Equipment: Flat Rack (12,2 x 2,5 x 3,7m). Quantity: 20. Pick-up place: Changsha, China. Place of unloading: Sturtevant, WI, USA.",
+    "expected": {"origin": "Changsha, China", "destination": "Sturtevant, WI, USA", "container_type": "OTHER", "raw_equipment": "Flat Rack (12,2 x 2,5 x 3,7m)", "container_count": 20, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": null, "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": true}
+  },
+  {
+    "id": "COMPANY_006",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Seafreight. Equipment: 40'- O.T. Quantity: 90. Pick-up place: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE. Place of unloading: Sturtevant, WI, USA.",
+    "expected": {"origin": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE", "destination": "Sturtevant, WI, USA", "container_type": "OTHER", "raw_equipment": "40'- O.T.", "container_count": 90, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": null, "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": true}
+  },
+  {
+    "id": "COMPANY_007",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Seafreight. Equipment: 40'HC. Quantity: 20. Pick-up place: Aichtal, Germany. Place of unloading: Sturtevant, WI, USA.",
+    "expected": {"origin": "Aichtal, Germany", "destination": "Sturtevant, WI, USA", "container_type": "40HC", "raw_equipment": "40'HC", "container_count": 20, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": null, "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": false}
+  },
+  {
+    "id": "COMPANY_008",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Seafreight. Equipment: 40'HC. Quantity: 30. Pick-up place: Cangzhou, China. Place of unloading: Sturtevant, WI, USA.",
+    "expected": {"origin": "Cangzhou, China", "destination": "Sturtevant, WI, USA", "container_type": "40HC", "raw_equipment": "40'HC", "container_count": 30, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": null, "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": false}
+  },
+  {
+    "id": "COMPANY_009",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Seafreight. Equipment: 40'HC. Quantity: 30. Pick-up place: Changsha, China. Place of unloading: Goa, India.",
+    "expected": {"origin": "Changsha, China", "destination": "Goa, India", "container_type": "40HC", "raw_equipment": "40'HC", "container_count": 30, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": null, "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": false}
+  },
+  {
+    "id": "COMPANY_010",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Seafreight. Equipment: Flat Rack (12,2 x 2,5 x 3,7m). Quantity: 310. Pick-up place: Shanghai, China. Place of unloading: Goa, India.",
+    "expected": {"origin": "Shanghai, China", "destination": "Goa, India", "container_type": "OTHER", "raw_equipment": "Flat Rack (12,2 x 2,5 x 3,7m)", "container_count": 310, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": null, "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": true}
+  },
+  {
+    "id": "COMPANY_011",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Road transport. Equipment: Standard Full Truck. Quantity: 270. Incoterm: FCA. Pick-up place: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE. Unloading place: Aichtal, Germany.",
+    "expected": {"origin": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE", "destination": "Aichtal, Germany", "container_type": "OTHER", "raw_equipment": "Standard Full Truck", "container_count": null, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": "FCA", "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": true}
+  },
+  {
+    "id": "COMPANY_012",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Road transport. Equipment: Low Bed Trailers (12,2 x 2,5 x 3,7m). Quantity: 55. Incoterm: FCA. Pick-up place: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE. Unloading place: Aichtal, Germany.",
+    "expected": {"origin": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE", "destination": "Aichtal, Germany", "container_type": "OTHER", "raw_equipment": "Low Bed Trailers (12,2 x 2,5 x 3,7m)", "container_count": null, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": "FCA", "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": true}
+  },
+  {
+    "id": "COMPANY_013",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Road transport. Equipment: Standard Full Truck. Quantity: 70. Incoterm: FCA. Pick-up place: Aichtal, Germany. Unloading place: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE.",
+    "expected": {"origin": "Aichtal, Germany", "destination": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE", "container_type": "OTHER", "raw_equipment": "Standard Full Truck", "container_count": null, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": "FCA", "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": true}
+  },
+  {
+    "id": "COMPANY_014",
+    "provenance": "private_company_rfq",
+    "source_file": "Template Frachtkostenanfrage.xlsx",
+    "input": "Road transport. Equipment: Standard Full Truck. Quantity: 60. Incoterm: CPT. Pick-up place: Tenevo, Bulgaria. Unloading place: \u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE.",
+    "expected": {"origin": "Tenevo, Bulgaria", "destination": "\u00c7erkezk\u00f6y/Tekirda\u011f, TURKYIE", "container_type": "OTHER", "raw_equipment": "Standard Full Truck", "container_count": null, "gross_weight_kg": null, "commodity": null, "cargo_ready_date": null, "required_arrival_date": null, "incoterm": "CPT", "dangerous_goods": null, "hs_code": null, "service_scope": null, "unsupported_equipment": true}
+  }
+]

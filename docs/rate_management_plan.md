@@ -1,0 +1,13 @@
+# Rate Management V1 implementation plan
+
+1. Add per-rate lifecycle state, sheet commercial metadata, and append-only tenant-scoped audit/version links. Migrate existing inactive rates to ARCHIVED; preserve all economics.
+2. Build strict request models and shared ownership/validity/charge validation. Commands run in savepoints and lock the tenant to serialize overlapping writes on PostgreSQL.
+3. Implement draft assembly, activation, metadata updates, successor snapshots, structured diffs, duplicate fingerprints and overlap checks using the existing pricing rank.
+4. Add internal API routes, scoped filters, readable details, and lifecycle/import documentation.
+5. Test October/November pricing and historical quotes, cross-tenant access, status, duplicates, overlap and malformed requests. Run Python/frontend suites, migrations and diff checks; perform a fresh read-only review.
+
+Decisions: Manual supplier rates remain SPOT/CONTRACT; CUSTOMER_FIXED belongs to customer quotes. Economic versions copy one rate and all charges into a successor sheet snapshot; unrelated source-sheet rates remain untouched. A tenant lock serializes successor allocation. Old rows stay active for historical dates unless explicitly deactivated. Draft charge assembly is allowed before activation; adding a charge to an active rate creates a version. Status and descriptive edits require an audited service-only write permission, preserving direct ORM immutability guards. No commits, external RFQ calls or deployments.
+
+Verification ledger: Initial missing-service test failed, then October/November pricing passed. Expanded tests exposed disjoint charge validity and SQLite's legacy savepoint early-commit behavior; both reproduced and fixed. Final read-only pricing review found no important/critical defects. Additional scope tests exposed legacy non-ocean management and explicit-null date patches being treated as omission; both reproduced and fixed. Root-sheet ACTIVE creation and per-rate DRAFT assembly are deliberate; a legacy DRAFT sheet cannot activate a rate without a successor. No pricing/parsing/frontend files changed.
+
+Completed: `python -m pytest tests -q` — 151 passed; `npm test -- --run` — 18 passed. SQLite upgrade/head/schema drift and migration round-trip checks passed; PostgreSQL offline DDL passed (no live PostgreSQL service available). `git diff --check` and new-file whitespace checks passed. Protected-file hash comparison showed zero changes. Demo: October buy/sell 3165.00/3544.80 USD; November 3025.00/3388.00 USD; October rate and stored quote unchanged. Local demo version/quote transaction was rolled back after verification. OpenAI extraction benchmarks were not run.

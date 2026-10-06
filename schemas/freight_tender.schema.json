@@ -1,0 +1,41 @@
+{
+  "type": "object",
+  "properties": {
+    "transport_mode": {
+      "type": ["string", "null"],
+      "enum": ["sea", "road", null]
+    },
+    "pickup_location": {
+      "type": ["string", "null"]
+    },
+    "port_of_loading": {
+      "type": ["string", "null"]
+    },
+    "port_of_discharge": {
+      "type": ["string", "null"]
+    },
+    "unloading_location": {
+      "type": ["string", "null"]
+    },
+    "equipment_type": {
+      "type": ["string", "null"]
+    },
+    "equipment_quantity": {
+      "type": ["integer", "null"]
+    },
+    "incoterm": {
+      "type": ["string", "null"]
+    }
+  },
+  "required": [
+    "transport_mode",
+    "pickup_location",
+    "port_of_loading",
+    "port_of_discharge",
+    "unloading_location",
+    "equipment_type",
+    "equipment_quantity",
+    "incoterm"
+  ],
+  "additionalProperties": false
+}
