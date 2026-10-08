@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import ReviewShipment from "./ReviewShipment";
 
 import { MAX_INPUT_LENGTH, requestExtraction, type ParserKind } from "../lib/parser";
@@ -75,6 +75,7 @@ export default function Home() {
     tender: { ...EMPTY_PANEL },
   });
   const panel = panels[activeTab];
+  const revisions = useRef({ spot: 0, tender: 0 });
   const text = panel.text;
   const loading = panel.loading;
 
@@ -89,12 +90,15 @@ export default function Home() {
     event.preventDefault();
     const kind = activeTab;
     const submittedText = panel.text;
+    const revision = ++revisions.current[kind];
     updatePanel(kind, { loading: true, error: null, result: null });
 
     try {
       const result = await requestExtraction(kind, submittedText);
+      if (revisions.current[kind] !== revision) return;
       updatePanel(kind, { result, loading: false });
     } catch (error) {
+      if (revisions.current[kind] !== revision) return;
       updatePanel(kind, {
         error: error instanceof Error ? error.message : "The extraction request failed.",
         loading: false,
@@ -102,7 +106,23 @@ export default function Home() {
     }
   };
 
-  const clearPanel = () => updatePanel(activeTab, { ...EMPTY_PANEL });
+  const clearPanel = () => { revisions.current[activeTab]++; updatePanel(activeTab, { ...EMPTY_PANEL }); };
+  const uploadEmail = async (file: File) => {
+    const revision = ++revisions.current.spot;
+    updatePanel("spot", { result: null, error: null, loading: true });
+    try {
+      if (!file.name.toLowerCase().endsWith(".eml") || file.size > 1_000_000) throw new Error("Choose an .eml file of at most 1 MB.");
+      const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
+      const response = await fetch(`${base}/email/decode`, { method: "POST", headers: { "Content-Type": "message/rfc822" }, body: file, cache: "no-store" });
+      const email = await response.json();
+      if (!response.ok) throw new Error(typeof email.detail === "string" ? email.detail : "Email could not be read.");
+      if (typeof email.text !== "string") throw new Error("Email response did not include text.");
+      if (revisions.current.spot === revision) updatePanel("spot", { text: email.text, loading: false,
+        error: email.attachments_ignored ? "Attachments were skipped. Include any required shipment details in the text before extracting." : null });
+    } catch (error) {
+      if (revisions.current.spot === revision) updatePanel("spot", { loading: false, error: error instanceof Error ? error.message : "Email upload failed." });
+    }
+  };
   const overLimit = text.length > MAX_INPUT_LENGTH;
   const extractLabel = activeTab === "spot" ? "Extract RFQ" : "Extract Tender";
 
@@ -173,6 +193,14 @@ export default function Home() {
             aria-labelledby={activeTab === "spot" ? "spot-tab" : "tender-tab"}
           >
             <form onSubmit={handleSubmit}>
+              {activeTab === "spot" && <div className="input-label-row">
+                <label htmlFor="email-file">Upload customer email (.eml)</label>
+                <input id="email-file" type="file" accept=".eml" disabled={loading} onChange={event => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  if (file) void uploadEmail(file);
+                }} />
+              </div>}
               <div className="input-label-row">
                 <label htmlFor="freight-text">
                   {activeTab === "spot" ? "Paste a freight quote request..." : "Paste a freight tender / lane entry..."}
@@ -185,7 +213,7 @@ export default function Home() {
                 id="freight-text"
                 name="freight-text"
                 value={text}
-                onChange={(event) => updatePanel(activeTab, { text: event.target.value, error: null })}
+                onChange={(event) => { revisions.current[activeTab]++; updatePanel(activeTab, { text: event.target.value, error: null, result: null, loading: false }); }}
                 placeholder={PLACEHOLDERS[activeTab]}
                 rows={7}
                 aria-describedby="privacy-note"

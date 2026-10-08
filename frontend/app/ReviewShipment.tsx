@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { pricingApi, type Lookups, type CustomerQuote, type Option } from "../lib/pricing";
+import QuotationDraft from "./QuotationDraft";
 
 type Shipment = {
   origin_location_id: string; destination_location_id: string; equipment_type_id: string;
@@ -135,6 +136,7 @@ export default function ReviewShipment({ extracted }: { extracted: Record<string
       <p><strong>Sell total: {quote.sell_total} {quote.currency}</strong></p>
       <p>{quote.charge_presentation}</p>
       <p>Rate: {quote.rate_reference} ({quote.selected_rate_id}) · Valid {quote.valid_from || "open"} to {quote.valid_to || "open"}</p>
+      <QuotationDraft quote={quote} incoterm={shipment.incoterm} />
     </section>}
   </section>;
 }
