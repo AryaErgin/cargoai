@@ -2,19 +2,36 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, Date, ForeignKeyConstraint, JSON, Numeric, String, Text, Uuid
+from sqlalchemy import (Boolean, CheckConstraint, Date, ForeignKey, ForeignKeyConstraint, Index, Integer, JSON,
+                        Numeric, String, Text, Uuid)
 from sqlalchemy.orm import Mapped, mapped_column, synonym
 
 from database.base import Base, UUIDPrimaryKey, TenantOwned, Timestamps, CreatedAt, owned, tenant_fk
-from database.models.enums import RATE_MODE, QUOTE_STATUS, COMMERCIAL_TYPE
+from database.models.enums import RATE_MODE, QUOTE_STATUS, COMMERCIAL_TYPE, SOURCING_STATUS
 
 
-class QuoteRequest(UUIDPrimaryKey, TenantOwned, CreatedAt, Base):
+class QuoteRequest(UUIDPrimaryKey, TenantOwned, Timestamps, Base):
     __tablename__ = "quote_requests"
-    __table_args__ = (*owned(), tenant_fk("customer_id", "customers"))
+    __table_args__ = (*owned(), tenant_fk("customer_id", "customers"),
+                      CheckConstraint("container_count IS NULL OR container_count > 0", name="positive_container_count"),
+                      CheckConstraint("gross_weight_kg IS NULL OR gross_weight_kg > 0", name="positive_gross_weight"),
+                      Index("ix_quote_requests_fingerprint", "tenant_id", "request_fingerprint"))
     customer_id: Mapped[UUID | None] = mapped_column(Uuid)
     source_text: Mapped[str | None] = mapped_column(Text)
     mode: Mapped[str | None] = mapped_column(RATE_MODE)
+    # Reviewed, structured shipment facts (carrier sourcing). Nullable so legacy rows stay valid.
+    origin_location_id: Mapped[UUID | None] = mapped_column(Uuid, ForeignKey("locations.id"))
+    destination_location_id: Mapped[UUID | None] = mapped_column(Uuid, ForeignKey("locations.id"))
+    equipment_type_id: Mapped[UUID | None] = mapped_column(Uuid, ForeignKey("equipment_types.id"))
+    container_count: Mapped[int | None] = mapped_column(Integer)
+    effective_date: Mapped[date | None] = mapped_column(Date)
+    requested_currency: Mapped[str | None] = mapped_column(String(3))
+    dangerous_goods: Mapped[bool | None] = mapped_column(Boolean)
+    incoterm: Mapped[str | None] = mapped_column(String(50))
+    commodity: Mapped[str | None] = mapped_column(String(255))
+    gross_weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(18, 3))
+    sourcing_status: Mapped[str] = mapped_column(SOURCING_STATUS, default="NONE", server_default="NONE")
+    request_fingerprint: Mapped[str | None] = mapped_column(String(64))
 
 
 class Quote(UUIDPrimaryKey, TenantOwned, Timestamps, Base):

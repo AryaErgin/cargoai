@@ -21,6 +21,7 @@ from app.spot_parser import parse_spot_rfq
 from app.tender_parser import parse_freight_tender
 from api.rates import router as rates_router
 from api.emails import router as emails_router
+from api.sourcing import router as sourcing_router
 
 
 MAX_INPUT_LENGTH = 20_000
@@ -30,6 +31,7 @@ app = FastAPI(title="CargoAI Parser API")
 app.include_router(rates_router)
 app.include_router(lookups_router)
 app.include_router(emails_router)
+app.include_router(sourcing_router)
 frontend_origin = os.environ.get(
     "CARGOAI_FRONTEND_ORIGIN", "http://localhost:3000"
 )

@@ -19,3 +19,5 @@ IMPORT_STATUS = enumeration("import_status", "PENDING", "PROCESSING", "REVIEW_RE
 QUOTE_STATUS = enumeration("quote_status", "DRAFT", "REVIEW", "APPROVED", "SENT", "EXPIRED")
 SUPPLIER_COMMERCIAL_TYPE = enumeration("supplier_commercial_type", "SPOT", "CONTRACT")
 COMMERCIAL_TYPE = enumeration("commercial_type", "SPOT", "CONTRACT", "CUSTOMER_FIXED")
+SOURCING_STATUS = enumeration("sourcing_status", "NONE", "NO_CARRIER_AVAILABLE", "RFQ_DRAFTED", "AWAITING_REPLIES", "RATE_RECEIVED", "CANCELLED")
+RFQ_STATUS = enumeration("rfq_status", "DRAFT", "APPROVED", "SENT", "REPLIED", "CANCELLED", "CLOSED")

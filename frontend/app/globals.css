@@ -619,3 +619,15 @@ textarea:focus {
 .review-grid input, .review-grid select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; color: #172033; }
 .result-card table { width: 100%; border-collapse: collapse; margin-top: 20px; }
 .result-card th, .result-card td { text-align: left; padding: 8px; border-bottom: 1px solid #e2e8f0; }
+/* Carrier sourcing panel: counts and status only, never carrier data. */
+.sourcing-panel { margin-top: 18px; border: 1px solid #dce4ed; border-radius: 10px; padding: 14px 16px; background: #fff; display: grid; gap: 10px; justify-items: start; }
+.sourcing-panel h4 { margin: 0; font-size: 14px; }
+.sourcing-panel p { margin: 0; font-size: 13px; }
+.sourcing-panel .api-error { margin: 0; }
+.sourcing-status { display: grid; grid-template-columns: max-content auto; gap: 4px 14px; margin: 0; font-size: 13px; }
+.sourcing-status dt { color: #586980; }
+.sourcing-status dd { margin: 0; font-weight: 600; }
+.sourcing-recalculate { display: grid; gap: 8px; justify-items: start; }
+.field-error { color: #8d3030; font-size: 12px; }
+.review-grid input[aria-invalid="true"] { border-color: #d77a7a; }
+.review-field { display: grid; gap: 6px; align-content: start; }

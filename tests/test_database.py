@@ -29,7 +29,8 @@ from database.session import build_engine
 TABLES = {"tenants", "locations", "location_aliases", "location_groups", "location_group_members",
           "equipment_types", "equipment_aliases", "suppliers", "rate_sheets", "rates", "charge_types",
           "rate_charges", "customers", "pricing_rules", "source_documents", "import_profiles", "import_jobs",
-          "quote_requests", "quotes", "quote_lines", "exchange_rates", "rate_events"}
+          "quote_requests", "quotes", "quote_lines", "exchange_rates", "rate_events",
+          "supplier_contacts", "supplier_lane_capabilities", "carrier_rfqs"}
 
 
 def migration_config(connection):
@@ -110,7 +111,7 @@ def test_postgresql_offline_migration():
     assert "UUID" in sql
     assert "TIMESTAMP WITH TIME ZONE" in sql
     assert "NUMERIC(18, 6)" in sql
-    assert sql.count("CREATE TABLE ") == 23  # Includes Alembic's version table.
+    assert sql.count("CREATE TABLE ") == 26  # Includes Alembic's version table.
     assert "BOOLEAN DEFAULT true" in sql
     assert "FOREIGN KEY(tenant_id, rate_sheet_id)" in sql
 

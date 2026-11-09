@@ -26,3 +26,9 @@ def local_demo_tenant(request: Request) -> UUID:
 def internal_access():
     # No internal identity/role exists yet. Supplier economics must remain private.
     raise HTTPException(403, "Rate administration requires authenticated internal company access")
+
+
+def internal_operator_access():
+    # Carrier names, recipient emails and buy prices are internal. The opt-in loopback operator mode
+    # (CARGOAI_LOCAL_INTERNAL_OPERATOR) arrives in sourcing phase 2; until then this always fails closed.
+    raise HTTPException(403, "Carrier sourcing review requires internal operator access")

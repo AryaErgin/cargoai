@@ -10,7 +10,9 @@ from database.repositories.tenant_repository import create_tenant
 from database.repositories.rate_repository import create_rate_sheet, create_rate, create_rate_charge
 from database.repositories.pricing_rule_repository import create_pricing_rule
 from database.repositories.exchange_rate_repository import create_exchange_rate
-from database.models import ExchangeRate
+from database.models import ExchangeRate, SupplierLaneCapability
+from database.repositories.supplier_repository import (create_lane_capability, create_supplier,
+    create_supplier_contact, find_supplier_by_name, find_supplier_contact)
 from database.session import session_scope
 
 
@@ -35,7 +37,8 @@ def seed_demo(session):
     existing = session.scalar(select(Tenant).where(Tenant.slug == "demo-forwarder"))
     if existing is not None:
         seed_demo_fx(session, existing.id)
-        return {"tenant_id": str(existing.id), "created": False, "demo_only": True}
+        sourcing = seed_demo_sourcing(session, existing.id)
+        return {"tenant_id": str(existing.id), "created": False, "demo_only": True, "sourcing": sourcing}
     tenant = create_tenant(session, name="Demo Forwarder", slug="demo-forwarder", timezone="UTC")
     equipment = {}
     for code, (display, mode) in EQUIPMENT.items():
@@ -90,8 +93,10 @@ def seed_demo(session):
     create_pricing_rule(session, tenant.id, name="DEMO Default ocean markup 12%", mode="OCEAN_FCL",
                         rule_type="PERCENT_MARKUP", value=Decimal("12"))
     seed_demo_fx(session, tenant.id)
+    sourcing = seed_demo_sourcing(session, tenant.id)
     return {"tenant_id": str(tenant.id), "created": True, "demo_only": True,
-            "locations": 4, "equipment_types": 8, "charge_types": 10, "rates": 1, "rate_charges": 3, "exchange_rates": 2}
+            "locations": 4, "equipment_types": 8, "charge_types": 10, "rates": 1, "rate_charges": 3, "exchange_rates": 2,
+            "sourcing": sourcing}
 
 
 def seed_demo_fx(session, tenant_id):
@@ -103,6 +108,67 @@ def seed_demo_fx(session, tenant_id):
             create_exchange_rate(session, tenant_id, base_currency=base, quote_currency=quote,
                 rate=Decimal(value), effective_from=date(2026, 10, 1), effective_to=date(2026, 10, 31),
                 source="SYNTHETIC DEMO FX ONLY - not market data")
+
+
+# Synthetic carriers only (example.com addresses). Lanes TR->CN and Shanghai->Mersin have no rate,
+# so the demo can trigger "Request carrier rates"; CN ports->Ambarli has an (October-only) rate.
+DEMO_CARRIERS = (
+    ("Demo Ocean Carrier", "OCEAN_CARRIER", "rates.demo-ocean@example.com", (
+        {"origin": ("group", "CHINA_MAIN_PORTS"), "destination": ("country", "TR")},)),
+    ("Example Blue Line", "OCEAN_CARRIER", "rfq.blueline@example.com", (
+        {"origin": ("country", "CN"), "destination": ("country", "TR")},
+        {"origin": ("country", "TR"), "destination": ("country", "CN")})),
+    ("Example Anatolia NVOCC", "NVOCC", "quotes.anatolia@example.com", (
+        {"origin": ("location", "TRMER"), "destination": ("group", "CHINA_MAIN_PORTS"), "equipment": "40HC",
+         "priority": 5},)),
+)
+
+
+def _capability_target(session, tenant_id, side, target):
+    kind, value = target
+    keys = {f"{side}_location_id": None, f"{side}_group_id": None, f"{side}_country_code": None}
+    if kind == "location":
+        keys[f"{side}_location_id"] = session.scalar(select(Location.id).where(Location.un_locode == value))
+    elif kind == "group":
+        keys[f"{side}_group_id"] = session.scalar(select(LocationGroup.id).where(
+            LocationGroup.tenant_id == tenant_id, LocationGroup.name == value))
+    else:
+        keys[f"{side}_country_code"] = value
+    return keys if any(item is not None for item in keys.values()) else None
+
+
+def seed_demo_sourcing(session, tenant_id):
+    """Idempotent synthetic carriers, RFQ contacts and lane capabilities for the demo tenant."""
+    created = {"carriers": 0, "contacts": 0, "capabilities": 0}
+    for name, supplier_type, email, capabilities in DEMO_CARRIERS:
+        supplier = find_supplier_by_name(session, tenant_id, name)
+        if supplier is None:
+            supplier = create_supplier(session, tenant_id, name=name, supplier_type=supplier_type)
+            created["carriers"] += 1
+        if find_supplier_contact(session, tenant_id, supplier.id, email) is None:
+            create_supplier_contact(session, tenant_id, supplier_id=supplier.id, email=email,
+                                    name="Synthetic pricing desk")
+            created["contacts"] += 1
+        for spec in capabilities:
+            origin = _capability_target(session, tenant_id, "origin", spec["origin"])
+            destination = _capability_target(session, tenant_id, "destination", spec["destination"])
+            if origin is None or destination is None:
+                continue
+            equipment_id = None
+            if spec.get("equipment"):
+                equipment_id = session.scalar(select(EquipmentType.id).where(
+                    EquipmentType.canonical_code == spec["equipment"]))
+            values = {**origin, **destination, "equipment_type_id": equipment_id}
+            exists = session.scalar(select(SupplierLaneCapability.id).where(
+                SupplierLaneCapability.tenant_id == tenant_id, SupplierLaneCapability.supplier_id == supplier.id,
+                SupplierLaneCapability.mode == "OCEAN_FCL",
+                *[getattr(SupplierLaneCapability, key).is_(None) if value is None
+                  else getattr(SupplierLaneCapability, key) == value for key, value in values.items()]))
+            if exists is None:
+                create_lane_capability(session, tenant_id, supplier_id=supplier.id, mode="OCEAN_FCL",
+                                       priority=spec.get("priority", 0), notes="SYNTHETIC DEMO CAPABILITY", **values)
+                created["capabilities"] += 1
+    return created
 
 
 def main():

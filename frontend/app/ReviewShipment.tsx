@@ -1,14 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { pricingApi, type Lookups, type CustomerQuote, type Option } from "../lib/pricing";
+import { ApiError, pricingApi, type Lookups, type CustomerQuote, type Option } from "../lib/pricing";
+import { buildSourcingRequest, grossWeightError, type SourcingRequestBody } from "../lib/sourcing";
 import QuotationDraft from "./QuotationDraft";
+import SourcingRequest from "./SourcingRequest";
 
 type Shipment = {
   origin_location_id: string; destination_location_id: string; equipment_type_id: string;
   container_count: string; effective_date: string; requested_currency: string;
   dangerous_goods: string; customer_id: string; incoterm: string;
+  // Sourcing-only fields: shared with carriers in RFQs, never sent to /quote/spot (extra="forbid").
+  commodity: string; gross_weight_kg: string;
 };
+
+function initialWeight(value: unknown): string {
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return typeof value === "string" ? value.trim() : "";
+}
 
 export default function ReviewShipment({ extracted }: { extracted: Record<string, unknown> }) {
   const [shipment, setShipment] = useState<Shipment>({
@@ -17,6 +26,8 @@ export default function ReviewShipment({ extracted }: { extracted: Record<string
     effective_date: typeof extracted.cargo_ready_date === "string" ? extracted.cargo_ready_date : "",
     requested_currency: "USD", dangerous_goods: typeof extracted.dangerous_goods === "boolean" ? String(extracted.dangerous_goods) : "",
     customer_id: "", incoterm: typeof extracted.incoterm === "string" ? extracted.incoterm : "",
+    commodity: typeof extracted.commodity === "string" ? extracted.commodity.trim() : "",
+    gross_weight_kg: initialWeight(extracted.gross_weight_kg),
   });
   const [lookups, setLookups] = useState<Lookups | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -24,6 +35,9 @@ export default function ReviewShipment({ extracted }: { extracted: Record<string
   const [quote, setQuote] = useState<CustomerQuote | null>(null);
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
+  // Set only when the last calculation failed with NO_RATE_FOUND; keyed by the pricing revision.
+  const [sourcing, setSourcing] = useState<{ revision: number; request: SourcingRequestBody; blockedReason: string | null } | null>(null);
+  const weightError = grossWeightError(shipment.gross_weight_kg);
   const revision = useRef(0);
   const alive = useRef(true);
 
@@ -70,12 +84,16 @@ export default function ReviewShipment({ extracted }: { extracted: Record<string
   function edit(field: keyof Shipment, value: string) {
     revision.current++;
     setShipment(current => ({ ...current, [field]: value }));
-    setQuote(null); setError(null); setLoading(false);
+    setQuote(null); setError(null); setLoading(false); setSourcing(null);
   }
 
-  async function calculate(event: FormEvent) {
+  function calculate(event: FormEvent) {
     event.preventDefault();
-    setQuote(null); setError(null);
+    void runCalculation();
+  }
+
+  async function runCalculation() {
+    setQuote(null); setError(null); setSourcing(null);
     if (!shipment.origin_location_id || !shipment.destination_location_id || !shipment.equipment_type_id ||
         !shipment.effective_date || !/^[A-Z]{3}$/.test(shipment.requested_currency) || shipment.dangerous_goods === "" ||
         !/^[1-9]\d*$/.test(shipment.container_count) || !Number.isSafeInteger(Number(shipment.container_count))) {
@@ -84,14 +102,27 @@ export default function ReviewShipment({ extracted }: { extracted: Record<string
     }
     const submittedRevision = ++revision.current;
     setLoading(true);
+    const { commodity, gross_weight_kg: grossWeight, ...pricingFields } = shipment;
+    const payload = {
+      ...pricingFields, container_count: Number(shipment.container_count), dangerous_goods: shipment.dangerous_goods === "true",
+      customer_id: shipment.customer_id || null, incoterm: shipment.incoterm || null,
+    };
     try {
-      const result = await pricingApi<CustomerQuote>("/quote/spot", {
-        ...shipment, container_count: Number(shipment.container_count), dangerous_goods: shipment.dangerous_goods === "true",
-        customer_id: shipment.customer_id || null, incoterm: shipment.incoterm || null,
-      });
+      const result = await pricingApi<CustomerQuote>("/quote/spot", payload);
       if (alive.current && revision.current === submittedRevision) setQuote(result);
     } catch (failure) {
-      if (alive.current && revision.current === submittedRevision) setError(failure instanceof Error ? failure.message : "Pricing failed");
+      if (!alive.current || revision.current !== submittedRevision) return;
+      setError(failure instanceof Error ? failure.message : "Pricing failed");
+      if (failure instanceof ApiError && failure.code === "NO_RATE_FOUND" && !payload.dangerous_goods) {
+        // Weight is irrelevant to pricing, so an invalid weight does not block Calculate; it only blocks
+        // the carrier request (the panel is cleared and rebuilt when the weight is edited).
+        const invalidWeight = grossWeightError(grossWeight);
+        setSourcing({
+          revision: submittedRevision,
+          request: buildSourcingRequest({ ...payload, commodity, gross_weight_kg: invalidWeight ? null : grossWeight }),
+          blockedReason: invalidWeight ? "Correct the gross weight before requesting carrier rates." : null,
+        });
+      }
     } finally { if (alive.current && revision.current === submittedRevision) setLoading(false); }
   }
 
@@ -121,10 +152,18 @@ export default function ReviewShipment({ extracted }: { extracted: Record<string
         </select></label>
         {selector("Customer", "customer_id", lookups?.customers || [], true)}
         <label>Incoterm<input value={shipment.incoterm} onChange={event => edit("incoterm", event.target.value)} /></label>
+        <label>Commodity (optional)<input maxLength={255} value={shipment.commodity} onChange={event => edit("commodity", event.target.value)} /></label>
+        <div className="review-field">
+          <label>Gross weight (kg, optional)<input inputMode="decimal" value={shipment.gross_weight_kg}
+            aria-invalid={weightError ? true : undefined} aria-describedby={weightError ? "gross-weight-error" : undefined}
+            onChange={event => edit("gross_weight_kg", event.target.value)} /></label>
+          {weightError && <span id="gross-weight-error" className="field-error" aria-live="polite">{weightError}</span>}
+        </div>
       </fieldset>
       <button className="primary-button" type="submit" disabled={initializing || !lookups || loading}>{loading ? "Calculating..." : "Calculate quote"}</button>
     </form>
     {error && <p role="alert" className="api-error">{error}</p>}
+    {sourcing && <SourcingRequest key={sourcing.revision} request={sourcing.request} blockedReason={sourcing.blockedReason} onRecalculate={() => void runCalculation()} />}
     {quote && <section aria-label="Calculated quote" aria-live="polite">
       <h3>Shipment quote</h3>
       {quote.demo_data && <p className="verification-notice">Synthetic demo rates — local testing only</p>}

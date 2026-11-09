@@ -9,8 +9,10 @@ from database.models.import_source import SourceDocument, ImportProfile, ImportJ
 from database.models.quote import QuoteRequest, Quote, QuoteLine
 from database.models.exchange_rate import ExchangeRate
 from database.models.rate_event import RateEvent
+from database.models.sourcing import SupplierContact, SupplierLaneCapability, CarrierRFQ
 
 __all__ = ["Tenant", "Location", "LocationAlias", "LocationGroup", "LocationGroupMember",
            "EquipmentType", "EquipmentAlias", "Supplier", "Customer", "RateSheet", "Rate",
            "ChargeType", "RateCharge", "PricingRule", "SourceDocument", "ImportProfile",
-           "ImportJob", "QuoteRequest", "Quote", "QuoteLine", "ExchangeRate", "RateEvent"]
+           "ImportJob", "QuoteRequest", "Quote", "QuoteLine", "ExchangeRate", "RateEvent",
+           "SupplierContact", "SupplierLaneCapability", "CarrierRFQ"]
